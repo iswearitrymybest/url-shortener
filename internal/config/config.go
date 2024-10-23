@@ -20,7 +20,7 @@ type HTTPServer struct {
 	IdleTimetout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
 
-func MustLoad() {
+func MustLoad() *Config {
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
 		log.Fatalf("CONFIG_PATH is not set")
@@ -37,4 +37,5 @@ func MustLoad() {
 		log.Fatalf("cannot read config: %s", err)
 	}
 
+	return &cfg
 }
