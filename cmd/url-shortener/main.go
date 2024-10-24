@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/ghostvoid/url-shortener/internal/config"
+	"github.com/ghostvoid/url-shortener/internal/http-server/handlers/url/save"
 	mwLogger "github.com/ghostvoid/url-shortener/internal/http-server/middleware/logger"
 	"github.com/ghostvoid/url-shortener/internal/lib/logger/handlers/slogpretty"
 	sl "github.com/ghostvoid/url-shortener/internal/lib/logger/slog"
@@ -48,6 +49,8 @@ func main() {
 	router.Use(mwLogger.New(log))
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
+
+	router.Post("/url", save.New(log, storage))
 
 	//TODO: run server
 
