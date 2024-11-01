@@ -16,9 +16,11 @@ type Config struct {
 }
 
 type HTTPServer struct {
-	Address      string        `yaml:"address" env-default:"localhost:8080"`
-	Timeout      time.Duration `yaml:"timeout" env-default:"4s"`
-	IdleTimetout time.Duration `yaml:"idle_timeout" env-default:"60s"`
+	Address     string        `yaml:"address" env-default:"localhost:8080"`
+	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
+	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
+	User        string        `yaml:"user" env-required:"true"`
+	Password    string        `yaml:"password" env-required:"true" env:"HTTP_SERVER_PASSWORD"`
 }
 
 func MustLoad() *Config {
@@ -28,7 +30,6 @@ func MustLoad() *Config {
 		log.Fatalf("CONFIG_PATH is not set, Config path must be provided with --config flag")
 	}
 
-	//if file exists
 	if _, err := os.Stat(*configPath); os.IsNotExist(err) {
 		log.Fatalf("config file doen not exist: %s", *configPath)
 	}
