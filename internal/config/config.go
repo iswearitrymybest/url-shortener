@@ -1,7 +1,6 @@
 package config
 
 import (
-	"flag"
 	"log"
 	"os"
 	"time"
@@ -10,7 +9,7 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env" env:"ENV" env-default:"local"`
+	Env         string `yaml:"env" env-default:"local"`
 	StoragePath string `yaml:"storage_path" env-required:"true"`
 	HTTPServer  `yaml:"http_server"`
 }
@@ -24,19 +23,19 @@ type HTTPServer struct {
 }
 
 func MustLoad() *Config {
-	configPath := flag.String("config", "", "Path to the configuration file")
-	flag.Parse()
-	if *configPath == "" {
-		log.Fatalf("CONFIG_PATH is not set, Config path must be provided with --config flag")
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		log.Fatal("CONFIG_PATH is not set")
 	}
 
-	if _, err := os.Stat(*configPath); os.IsNotExist(err) {
-		log.Fatalf("config file doen not exist: %s", *configPath)
+	// check if file exists
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		log.Fatalf("config file does not exist: %s", configPath)
 	}
 
 	var cfg Config
 
-	if err := cleanenv.ReadConfig(*configPath, &cfg); err != nil {
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		log.Fatalf("cannot read config: %s", err)
 	}
 
