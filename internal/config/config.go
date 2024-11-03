@@ -28,6 +28,11 @@ func MustLoad() *Config {
 		log.Fatal("CONFIG_PATH is not set")
 	}
 
+	httpServerPassword := os.Getenv("HTTP_SERVER_PASSWORD")
+	if httpServerPassword == "" {
+		log.Fatal("HTTP_SERVER_PASSWORD is not set")
+	}
+
 	// check if file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Fatalf("config file does not exist: %s", configPath)

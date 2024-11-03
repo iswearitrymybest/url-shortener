@@ -40,7 +40,7 @@ func main() {
 	log.Info(
 		"starting project",
 		slog.String("env", cfg.Env),
-		slog.String("version:%s", version),
+		slog.String("version", version),
 	)
 	log.Debug("debug messages are enabled")
 
