@@ -1,1 +1,3 @@
 storage/storage.db
+.github/workflows/deploy.yaml
+config/prog.yaml
