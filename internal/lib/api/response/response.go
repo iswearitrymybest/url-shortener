@@ -30,22 +30,27 @@ func Error(msg string) Response {
 	}
 }
 
-func ValidationError(errs validator.ValidationErrors) Response {
-	var errMsgs []string
+// ValidationError constructs a Response with a Status of "Error" and an Error containing
+// a comma-separated list of human-readable error messages for the given validator.ValidationErrors.
+func ValidationError(errors validator.ValidationErrors) Response {
+	var errorMessages []string
 
-	for _, err := range errs {
-		switch err.ActualTag() {
+	for _, err := range errors {
+		field := err.Field()
+		tag := err.ActualTag()
+
+		switch tag {
 		case "required":
-			errMsgs = append(errMsgs, fmt.Sprintf("field %s is a required field", err.Field()))
+			errorMessages = append(errorMessages, fmt.Sprintf("field %s is a required field", field))
 		case "url":
-			errMsgs = append(errMsgs, fmt.Sprintf("field %s is not a valid URL", err.Field()))
+			errorMessages = append(errorMessages, fmt.Sprintf("field %s is not a valid URL", field))
 		default:
-			errMsgs = append(errMsgs, fmt.Sprintf("field %s is not valid", err.Field()))
+			errorMessages = append(errorMessages, fmt.Sprintf("field %s is not valid", field))
 		}
 	}
 
 	return Response{
 		Status: StatusError,
-		Error:  strings.Join(errMsgs, ", "),
+		Error:  strings.Join(errorMessages, ", "),
 	}
 }

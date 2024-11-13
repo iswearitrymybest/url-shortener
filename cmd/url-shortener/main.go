@@ -12,13 +12,14 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/ghostvoid/url-shortener/internal/config"
-	"github.com/ghostvoid/url-shortener/internal/http-server/handlers/redirect"
-	"github.com/ghostvoid/url-shortener/internal/http-server/handlers/url/save"
-	mwLogger "github.com/ghostvoid/url-shortener/internal/http-server/middleware/logger"
-	"github.com/ghostvoid/url-shortener/internal/lib/logger/handlers/slogpretty"
-	sl "github.com/ghostvoid/url-shortener/internal/lib/logger/slog"
-	"github.com/ghostvoid/url-shortener/internal/storage/sqlite"
+	"url-shortener/internal/config"
+	"url-shortener/internal/http-server/handlers/redirect"
+	"url-shortener/internal/http-server/handlers/url/delete"
+	"url-shortener/internal/http-server/handlers/url/save"
+	mwLogger "url-shortener/internal/http-server/middleware/logger"
+	"url-shortener/internal/lib/logger/handlers/slogpretty"
+	sl "url-shortener/internal/lib/logger/slog"
+	"url-shortener/internal/storage/sqlite"
 )
 
 const (
@@ -28,9 +29,6 @@ const (
 )
 
 func main() {
-	//cleanevn for config package
-	//slog - logger
-	//router - chi
 	version := "v0.2"
 
 	cfg := config.MustLoad()
@@ -64,10 +62,10 @@ func main() {
 		}))
 
 		r.Post("/", save.New(log, storage))
-		// TODO: add DELETE /url/{id}
 	})
 
 	router.Get("/{alias}", redirect.New(log, storage))
+	router.Delete("/{alias}", delete.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 
@@ -108,6 +106,13 @@ func main() {
 	log.Info("server stopped")
 }
 
+// setupLogger returns a logger according to the given environment.
+//
+// If env is:
+// - "local", it returns a logger with pretty formatting and debug level.
+// - "dev", it returns a logger with JSON formatting and debug level.
+// - "prod", it returns a logger with JSON formatting and info level.
+// - anything else, it returns a logger with JSON formatting and info level (security reasons).
 func setupLogger(env string) *slog.Logger {
 	var log *slog.Logger
 
@@ -131,6 +136,9 @@ func setupLogger(env string) *slog.Logger {
 	return log
 }
 
+// setupPrettySlog returns a logger with pretty formatting and debug level.
+//
+// It's used in development mode for easier debugging.
 func setupPrettySlog() *slog.Logger {
 	opts := slogpretty.PrettyHandlerOptions{
 		SlogOpts: &slog.HandlerOptions{

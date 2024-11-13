@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ghostvoid/url-shortener/internal/storage"
+	"url-shortener/internal/storage"
+
 	"github.com/mattn/go-sqlite3"
 )
 
@@ -13,6 +14,12 @@ type Storage struct {
 	db *sql.DB
 }
 
+// New creates a new SQLite storage instance, connecting to the database at the
+// given storagePath. If the database does not exist, it will be created. If the
+// database exists, but the table does not, it will be created. If the database
+// exists and the table exists, no changes will be made to the database.
+//
+// The returned Storage instance is ready to use.
 func New(storagePath string) (*Storage, error) {
 	const operation = "storage.sqlite.New"
 
@@ -40,6 +47,10 @@ func New(storagePath string) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
+// SaveURL saves the given URL with the given alias in the database.
+// If the alias is empty, it generates a random one.
+// If the URL already exists in the database, it returns ErrURLExists.
+// Otherwise, it returns the ID of the newly created URL.
 func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 	const operation = "storage.sqlite.SaveURL"
 
@@ -64,6 +75,9 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 	return id, nil
 }
 
+// GetURL retrieves the URL associated with the given alias from the database.
+// Returns the URL as a string if found, otherwise returns an error if the alias
+// does not exist or if there is an issue executing the query.
 func (s *Storage) GetURL(alias string) (string, error) {
 	const operation = "storage.sqlite.GetURL"
 
@@ -85,4 +99,22 @@ func (s *Storage) GetURL(alias string) (string, error) {
 	return resURL, nil
 }
 
-// func (s *Storage) DeleteURL(alias string) error
+// DeleteURL deletes a URL from the database
+func (s *Storage) DeleteURL(alias string) error {
+	const operation = "storage.sqlite.DeleteURL"
+
+	stmt, err := s.db.Exec("DELETE FROM url WHERE alias = ?", alias)
+	if err != nil {
+		return fmt.Errorf("%s: %w", operation, err)
+	}
+
+	rowsAffected, err := stmt.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return errors.New("url not found")
+	}
+
+	return nil
+}

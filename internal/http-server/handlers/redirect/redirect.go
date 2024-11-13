@@ -9,9 +9,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 
-	resp "github.com/ghostvoid/url-shortener/internal/lib/api/response"
-	sl "github.com/ghostvoid/url-shortener/internal/lib/logger/slog"
-	"github.com/ghostvoid/url-shortener/internal/storage"
+	resp "url-shortener/internal/lib/api/response"
+	sl "url-shortener/internal/lib/logger/slog"
+	"url-shortener/internal/storage"
 )
 
 // URLGetter is an interface for getting url by alias.

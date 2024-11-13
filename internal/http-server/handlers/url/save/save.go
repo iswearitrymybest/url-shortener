@@ -5,10 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	resp "github.com/ghostvoid/url-shortener/internal/lib/api/response"
-	sl "github.com/ghostvoid/url-shortener/internal/lib/logger/slog"
-	"github.com/ghostvoid/url-shortener/internal/lib/random"
-	"github.com/ghostvoid/url-shortener/internal/storage"
+	resp "url-shortener/internal/lib/api/response"
+	sl "url-shortener/internal/lib/logger/slog"
+	"url-shortener/internal/lib/random"
+	"url-shortener/internal/storage"
+
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
@@ -27,11 +28,16 @@ type Response struct {
 	Alias string `json:"alias,omitempty"`
 }
 
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLSaver
 type URLSaver interface {
 	SaveURL(urlToSave string, alias string) (int64, error)
 }
 
+// New creates a new HTTP handler function for saving URLs.
+// It decodes the JSON request body into a Request struct, validates the URL,
+// and attempts to save it using the provided URLSaver. If no alias is provided,
+// it generates a random one. The function responds with an appropriate JSON
+// response based on the outcome, such as validation errors, existing URLs, or
+// successful saves.
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const operation = "handlers.url.save.New"
@@ -66,6 +72,16 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		alias := req.Alias
 		if alias == "" {
 			alias = random.NewRandomString(aliasLength)
+			log.Info("generated random alias", slog.String("alias", alias))
+		} else {
+			existingAlias := random.NewRandomString(aliasLength)
+			if alias == existingAlias {
+				log.Info("generated alias already exists", slog.String("alias", alias))
+
+				render.JSON(w, r, resp.Error("generated alias already exists"))
+
+				return
+			}
 		}
 
 		//TODO check NewRandomString == req.Alias
@@ -93,6 +109,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	}
 }
 
+// responseOK renders a successful response with the generated alias.
 func responseOK(w http.ResponseWriter, r *http.Request, alias string) {
 	render.JSON(w, r, Response{
 		Response: resp.OK(),
